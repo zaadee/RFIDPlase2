@@ -54,7 +54,9 @@ String input; //Value when keypad.
 //Status off working  0 = normal state
 //                    1 = Access to system.
 byte state;
-
+int timer;
+String carData;
+String driverData;
 //Functions!!!
 //---------------------------------------------------------------------------------------------------------------
 void  dumpFRIDInfo() {
@@ -98,6 +100,51 @@ void readCardRfid() {
   Serial.print(F("Data in block ")); Serial.print(blockAddr); Serial.println(F(":"));
   dump_byte_array(buffer, 16); Serial.println();
   Serial.println();
+
+  //Create data
+  input = "";
+  for (byte i = 0; i < 6; i++) {
+    //Serial.print(buffer[i] < 0x10 ? " 0" : " ");
+    //Serial.print(buffer[i], HEX);
+    input += String::String(buffer[i], HEX);
+  }
+  input.toUpperCase();
+
+  if (input.charAt(0) == 'C') {
+    carData = input;
+    Serial.print(F("Car data: ")); Serial.println(carData);
+  } else if (input.charAt(0) == 'D') {
+    driverData = input;
+    Serial.print(F("Driver data: ")); Serial.println(driverData);
+  } else {//If Rfid card data not math C(car) or D(Driver)
+    input = "";
+    carData = "";
+    driverData = "";
+    state = 0;
+    clearRfid();
+    Serial.println(F("Rfid card Incorrect!"));
+    delay(2000);
+    printSerialEnd();
+    Serial.println(F("State 0: Listener Keypad and Rfid"));
+    return;
+  }
+
+  if (carData != "" && driverData != "") {
+    //Send data to node mcu.
+  } else if (carData == "") {
+    state = 4; //To next state waitRemainingcard.
+    timer = 0; //Use timer wait remaining rfid card.
+    printSerialEnd();
+    Serial.println(F("State 4: Wait Remaining card"));
+    Serial.print(F("Please tracking car card..."));
+  } else if (driverData == "") {
+    state = 4; //To next state waitRemainingcard.
+    timer = 0; //Use timer wait remaining rfid card.
+    printSerialEnd();
+    Serial.println(F("State 4: Wait Remaining card"));
+    Serial.print(F("Please tracking you card..."));
+  }
+
   clearRfid();
   delay(2000);
 }
@@ -203,6 +250,8 @@ void setup() {
   //Serial.println();
 
   state = 0;
+  carData = "";
+  driverData = "";
   Serial.println(F("Start..."));
   Serial.println(F("State 0: Listener Keypad and Rfid"));
 }
@@ -333,6 +382,30 @@ void writeDatatoRfidCard() {
   }
 }
 //---------------------------------------------------------------------------------------------------------------
+/**
+  State 4:  Wait remaining rfid card.
+            The sytem design for 2 rfid (Car and Driver) .
+            Must wait 2 data befor send to node mcu.
+            Wait 30 second.
+*/
+void waitRemainingcard() {
+  if (rfidListener()) {
+    readCardRfid();
+  }
+  timer += 1;
+  //Serial.print(F("Timer: "));Serial.println(timer);
+  if (timer == 1000) {//30 Second
+    carData = "";
+    driverData = "";
+    state = 0;
+    timer = 0;
+    Serial.println(F("Timeout wait remaining card!"));
+    delay(2000);
+    printSerialEnd();
+    Serial.println(F("State 0: Listener Keypad and Rfid"));
+  }
+}
+//---------------------------------------------------------------------------------------------------------------
 void printSerialEnd() {
   Serial.println(F("--------------------------------------"));
 }
@@ -348,6 +421,8 @@ void loop() {
     fillInDataForWriteRfidCard();
   } else if (state == 3) {
     writeDatatoRfidCard();
+  } else if (state == 4) {
+    waitRemainingcard();
   }
 
   //delay(200);
