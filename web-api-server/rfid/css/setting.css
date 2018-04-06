@@ -1,0 +1,15 @@
+.glyphicon {  
+    margin-bottom: 10px;margin-right: 10px;
+}
+small {
+    display: block;
+    line-height: 1.428571429;
+    color: #999;
+}
+
+.center-cropped-image {
+    width: 100px;
+    height: 100px;
+    background-position: center center;
+    background-repeat: no-repeat;
+  }
