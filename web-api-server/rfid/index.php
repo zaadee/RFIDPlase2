@@ -13,6 +13,7 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/signin.css">
+    <link rel="stylesheet" href="css/history.css">
 
     <title>RFID</title>
   </head>
@@ -45,8 +46,8 @@
                 <?php
                     //$sql = "SELECT * FROM history ORDER BY time DESC";
                     $sql = "SELECT history.time ,history.status, 
-                                 car.band, car.model, car.license_plate, 
-                                 driver.first_name, driver.last_name 
+                                 car.band, car.model, car.license_plate, car.image as carimage,
+                                 driver.first_name, driver.last_name ,driver.image as driverimage
                           FROM history 
                           INNER JOIN car ON history.car = car.id 
                           INNER JOIN driver ON history.driver = driver.id
@@ -59,9 +60,21 @@
                             <tr>
                                 <td><?php echo date('d/m/Y H:i:s', $row['time']); ?></td>
                                 <td><?php echo ($row['status'] == 1? "เข้า" : "ออก"); ?></td>
-                                <td><?php echo  ($row['band'] ." " .$row['model']); ?></td>
+                                <td>
+                                    <div class="image">
+                                        <img class="object-fit_cover" src = <?php echo(($row['carimage']== '')? "assets/car.png" : ("assets/car/".$row['carimage'])) ?> id = "car_image"width="100" height="100"/>
+                                    </div>
+                                    <br/>
+                                    <?php echo  ($row['band'] ." " .$row['model']); ?>
+                                </td>
                                 <td><?php echo $row['license_plate']; ?></td>
-                                <td><?php echo $row['first_name']." " .$row['last_name']; ?></td>
+                                <td>
+                                    <div class="image">
+                                        <img class="object-fit_cover" src = <?php echo(($row['driverimage']== '')? "assets/driver.png" : ("assets/driver/".$row['carimage'])) ?> id = "car_image"width="100" height="100"/>
+                                    </div>
+                                    <br/>
+                                    <?php echo $row['first_name']." " .$row['last_name']; ?>
+                                </td>
                             </tr>
                             <?php
                         }
