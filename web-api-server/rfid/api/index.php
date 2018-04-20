@@ -1,11 +1,12 @@
 <?php
+ 
 
 if (isset($_GET['action'])) {
     $action = $_GET['action'];
     if (($action == "post_in_out") && ($_SERVER['REQUEST_METHOD'] == 'POST')) {
         postInOutHistory();
-    } else if (($action == "get_in_out")) {
-        getInOutHistory();
+    } else if (($action == "is_new_data")) {
+        isNewData();
     } else {
         echoBadRequest("Action is invalid");
     }
@@ -13,11 +14,36 @@ if (isset($_GET['action'])) {
     echoBadRequest("No action parameter");
 }
 
-function getInOutHistory()
-{
-    echo ("get_in_out");
+function isNewData(){
+    include('../config/database-config.php');
+    $sql = "SELECT * FROM is_new;";
+    $result = $conn->query($sql);
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        if($row['is_new_data'] == true){
+            setNewData(false);
+            //echoResult(true, 200, "OK");
+            echo(true);
+            return;
+        }
+        echo(false);
+        //echoResult(false, 200, "OK");
+        return;
+    }
+    echoBadRequest("BadRequest");
 }
 
+function setNewData($is_new ){
+    include('../config/database-config.php');
+    $sql = "UPDATE is_new SET is_new_data ='" .$is_new ."' WHERE 1 ;";
+    $result = $conn->query($sql);
+    
+    if(!$result){
+        echo false;
+        return;
+    }
+    echo true;
+}
 function postInOutHistory()
 {
     include('../config/database-config.php');
@@ -75,6 +101,7 @@ function postInOutHistory()
             ('" . $time . "','" . $car . "','" . $driver . "'," . $status . ");";
 
         if ($conn->query($sql) === true) {
+            setNewData(true);
             echoResult("Success", $resultCode, "OK");
         } else {
             echoResult("Error", 500, "Internal Server Error");

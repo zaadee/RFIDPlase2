@@ -70,7 +70,7 @@
                                 <td><?php echo $row['license_plate']; ?></td>
                                 <td>
                                     <div class="image">
-                                        <img class="object-fit_cover" src = <?php echo(($row['driverimage']== '')? "assets/driver.png" : ("assets/driver/".$row['carimage'])) ?> id = "car_image"width="100" height="100"/>
+                                        <img class="object-fit_cover" src = <?php echo(($row['driverimage']== '')? "assets/driver.png" : ("assets/driver/".$row['driverimage'])) ?> id = "car_image"width="100" height="100"/>
                                     </div>
                                     <br/>
                                     <?php echo $row['first_name']." " .$row['last_name']; ?>
@@ -105,8 +105,10 @@
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="js/jquery-3.2.1.slim.min.js"></script>
+    <!-- <script src="js/jquery-3.2.1.slim.min.js"></script> -->
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script src="js/popper.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+    <script src="js/index.js"></script>
   </body>
 </html>
