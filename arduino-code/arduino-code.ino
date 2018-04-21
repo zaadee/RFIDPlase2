@@ -62,6 +62,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 #include <SPI.h>
 #include <MFRC522.h>
 
+int BUZZER = 8;
 constexpr uint8_t RST_PIN = 9;  // Configurable, see typical pin layout above
 constexpr uint8_t SS_PIN = 10;  // Configurable, see typical pin layout above
 MFRC522 rfid(SS_PIN, RST_PIN);  // Create MFRC522 instance
@@ -333,6 +334,7 @@ bool rfidListener() {
 
   cardId.toUpperCase();
   Serial.println("Card Id: " + cardId);
+  onBuzzer(100,1);
   return true;
 }
 //---------------------------------------------------------------------------------------------------------------
@@ -349,6 +351,7 @@ void dump_byte_array(byte *buffer, byte bufferSize) {
 void keypadListener() {
   char key = keypad.getKey();
   if (key ) {
+    onBuzzer(100,1);
     if (key == '*') {
       clearData();
       setState(STATE_LOGIN);
@@ -374,6 +377,7 @@ void loginToSystem() {
   String pass = "1234";
   char key = keypad.getKey();
   if (key ) {
+    onBuzzer(100,1);
     timer = 0; //Whwn pressed keypad well be reset timer.
     if (key == '#') {
       if (input == pass) { //Login success. To next state fill in data for write rfid card.
@@ -408,6 +412,7 @@ void loginToSystem() {
     Serial.println(F(""));
     Serial.println(F("Timeout wait login!"));
     lcdPrint("Timeout!", "Wait login");
+    onBuzzer(200,3);
     delay(2000);
     setState(STATE_NORMAL);
   }
@@ -454,6 +459,7 @@ byte getBuyteUgly(char key) {
 void fillInDataForWriteRfidCard() {
   char key = keypad.getKey();
   if (key ) {
+    onBuzzer(100,1);
     timer = 0; //Whwn pressed keypad well be reset timer.
     if (key == '#') {
       if (input.length() > 0) { //If have data. to next state Write data to Rfid card.
@@ -487,6 +493,7 @@ void fillInDataForWriteRfidCard() {
     Serial.println(F(""));
     Serial.println(F("Timeout wait fill data!"));
     lcdPrint("Timeout!", "Wait data");
+    onBuzzer(200,3);
     delay(2000);
     setState(STATE_NORMAL);
   }
@@ -509,6 +516,7 @@ void writeDatatoRfidCard() {
     Serial.println(F("Timeout wait tracking card!"));
     lcdPrint("Timeout!", "Tracking card");
     clearData();
+    onBuzzer(200,3);
     delay(2000);
     setState(STATE_NORMAL);
   }
@@ -529,6 +537,7 @@ void waitRemainingcard() {
     Serial.println(F("Timeout wait remaining card!"));
     lcdPrint("Timeout!", "Tracking card");
     clearData();
+    onBuzzer(200,3);
     delay(2000);
     setState(STATE_NORMAL);
   }
@@ -541,13 +550,17 @@ void printResult(int result) {
   if (result == 200) {
     Serial.print(F("Check in Success!"));
     lcdPrint("Check in", "Success!");
+    onBuzzer(200,2);
   } else if (result == 201) {
     Serial.print(F("Check out Success!"));
     lcdPrint("Check out", "Success!");
+    onBuzzer(200,2);
   } else if (result == 400) {
     Serial.print(F("Bad request"));
+    onBuzzer(200,3);
     lcdPrint("Error", "Bad request!");
   } else if (result == 500) {
+    onBuzzer(200,3);
     Serial.print(F("Server Error"));
     lcdPrint("Error", "Server Error");
   }
@@ -569,13 +582,14 @@ void waitResponse() {
     setState(STATE_NORMAL);
     return;
   }
-  
+
   delay(30);
   if (isTimeout(1000)) { //Wait 30 second.
     Serial.println(F(""));
     Serial.println(F("Timeout Server not response!"));
     lcdPrint("Timeout!", "Not response");
     clearData();
+    onBuzzer(200,3);
     delay(2000);
     setState(STATE_NORMAL);
   }
@@ -597,6 +611,7 @@ void printLcdCheclInOut() {
 void checkInoutWithKeypad() {
   char key = keypad.getKey();
   if (key ) {
+    onBuzzer(100,1);
     timer = 0; //Whwn pressed keypad well be reset timer.
     if (key == '#') {
 
@@ -641,6 +656,7 @@ void checkInoutWithKeypad() {
     Serial.println(F(""));
     Serial.println(F("Timeout wait check in out with keypad!"));
     lcdPrint("Timeout!", "Wait keypad");
+    onBuzzer(200,3);
     delay(2000);
     setState(STATE_NORMAL);
   }
@@ -660,8 +676,27 @@ void initilLcd() {
   lcd.backlight();
   lcd.setCursor(0, 0);
 }
+
+/**
+  Duration in millisec.
+*/
+void onBuzzer(int duration, int count) {
+  if (count <= 0) {
+    return;
+  }
+  
+  for (int i = 0; i < count; i++) {
+    digitalWrite(BUZZER, LOW);
+    delay(duration);
+    digitalWrite(BUZZER, HIGH);
+    delay(duration);
+  }
+  //digitalWrite(BUZZER, LOW);
+}
 //---------------------------------------------------------------------------------------------------------------
 void setup() {
+  pinMode(BUZZER, OUTPUT);
+
   Serial.begin(115200);     // Initialize serial communications with the PC
   while (!Serial);          // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
   ArduinoSerial.begin(115200);
@@ -672,6 +707,7 @@ void setup() {
   initialKeyForRfid();
   initilLcd();
   clearData();
+  digitalWrite(BUZZER, HIGH);
   Serial.println(F("Start..."));
 
   setState(0);
